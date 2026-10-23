@@ -11,10 +11,21 @@ const allowedOrigins = (process.env.CLIENT_URL || 'http://localhost:5173,http://
   .split(',')
   .map((o) => o.trim());
 
+// Wildcard patterns for Vercel preview deployments (e.g., quiz-verse-*.vercel.app)
+const vercelPreviewPattern = /^https:\/\/quiz-verse-[a-z0-9-]+\.vercel\.app$/i;
+
+function isAllowedOrigin(origin) {
+  if (!origin) return true; // Allow non-browser requests (curl, server-to-server)
+  if (allowedOrigins.includes(origin)) return true;
+  // Allow any Vercel preview deployment for this project
+  if (vercelPreviewPattern.test(origin)) return true;
+  return false;
+}
+
 app.use(
   cors({
     origin: (origin, callback) => {
-      if (!origin || allowedOrigins.includes(origin)) {
+      if (isAllowedOrigin(origin)) {
         callback(null, true);
       } else {
         callback(new Error('Not allowed by CORS'));
